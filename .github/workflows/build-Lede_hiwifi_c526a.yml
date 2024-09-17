@@ -18,22 +18,12 @@ on:
         default: 'build-Lede_hiwifi_c526a'
 
 
-#编辑任意指定文件触发开始编译
-  push:
-    branches:
-      - master
-    paths:
-      - '开启编译'
+ #定时触发开始编译(开启定时编译请先确定SSH处在关闭状态,要不然SSH没人管,会卡SSH编译失败)
+ #  schedule:
+ #    - cron: 0 8 */5 * *
 
-
-#定时触发开始编译(开启定时编译请先确定SSH处在关闭状态,要不然SSH没人管,会卡SSH编译失败)
-#  schedule:
-#    - cron: 0 8 */5 * *
-
-
-#点☆Star触发开始编译
-  watch:
-#    types: started
+ #手动编译
+  workflow_dispatch:
 
 
 env: 
@@ -44,7 +34,7 @@ env:
 
 jobs: 
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: github.event.repository.owner.id == github.event.sender.id
 
     name: 编译 ${{matrix.target}}
@@ -55,7 +45,7 @@ jobs:
 
     steps:
     - name: 准备结束
-      uses: actions/checkout@v2
+      uses: actions/checkout@main
  
     - name: 检测脚本设置
       run: |
