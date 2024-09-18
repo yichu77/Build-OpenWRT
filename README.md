@@ -17,8 +17,11 @@ ROCKCHIP系列、MEDIATEK系列、X64系列。
 
 Depends.txt——环境依赖列表
 
-workflows——自定义CI配置
+.github——自定义CI配置
 
-Scripts——自定义脚本
+build——各平台编译文件夹
 
-Config——自定义配置
+--  .Config——自定义配置文件
+--  diy-1.sh
+--  diy-2.sh
+--  settings.ini——自定义设置文件
