@@ -77,7 +77,7 @@ jobs:
         echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
         echo "SERVERCHAN_SCKEY=${SERVERCHAN_SCKEY}" >> $GITHUB_ENV
     
-    - name: 开始安装编译所需系统
+    - name: 部署编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -149,7 +149,19 @@ jobs:
         echo "date1=$(date "+%Y年%m月%d号-%H点%M分")" >> $GITHUB_ENV
         echo "date2=$(date "+%Y%m%d-%H%M")" >> $GITHUB_ENV
 
-    - name: 上传bin文件夹(固件+ipk)在github空间
+     - name: 服务器信息
+      run: |
+        cd ./openwrt/
+
+        echo "======================="
+        lscpu | egrep "name|Core|Thread"
+        echo "======================="
+        df -h
+        echo "======================="
+        du -h --max-depth=1
+        echo "======================="
+
+      - name: 上传bin文件夹(固件+ipk)在github空间
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
@@ -183,12 +195,12 @@ jobs:
         path: ./config
 
     - name: 上传固件在github空间
-      uses: actions/upload-artifact@main
+      uses: softprops/action-gh-release@master
       if: steps.organizer.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
         name: OpenWrt_firmware_${{matrix.target}}_${{ env.date }}
         path: ${{ env.FIRMWARE }}
-
+    
     - name: 删除上传在github空间的老固件
       uses: dev-drprasad/delete-older-releases@master
       if: steps.organizer.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
