@@ -191,7 +191,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       with:
-        name: ${{ env.date1 }} 「 ${{ env.WXFB_MESSAGE }} 」固件
+        name: ${{ env.date1 }} 「 ${{ matrix.target }} 」固件
         tag_name: ${{ env.date2 }}
         body: |            
             ☆  源码 : ${{ env.REPO_URL }}
