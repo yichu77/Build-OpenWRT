@@ -32,7 +32,7 @@ jobs:
         target: [Lede_hiwifi_c526a] 
 
     steps:
-    - name: 项目准备
+    - name: 签入项目
       uses: actions/checkout@main
 
     - name: 初始化
@@ -73,7 +73,7 @@ jobs:
     - name: 加载默认feeds文件
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x build/${{matrix.target}}/$DIY_P1_SH
+        chmod +x $GITHUB_WORKSPACE/build/${{matrix.target}}/$DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/build/${matrix.target}/$DIY_P1_SH
 
