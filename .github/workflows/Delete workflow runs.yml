@@ -19,7 +19,7 @@ on:
       name:
         description: 'Person to greet'
         required: true
-        default: 'build-Lede_hiwifi_c526a')${{matrix.target}}
+        default: 'build-Lede_hiwifi_c526a'${{matrix.target}}
 
 env:
   TZ: Asia/Shanghai
