@@ -26,9 +26,12 @@ jobs:
     runs-on: ubuntu-20.04
     name: 删除 workflow runs
     steps:
-    - name: Delete workflow runs
+    - name: 签入项目
+      uses: actions/checkout@main
+
+    - name: 删除 workflow runs
       uses: Mattraks/delete-workflow-runs@main
       with:
-        retain_days: 0
+        retain_days: 1
         keep_minimum_runs: 2
 
