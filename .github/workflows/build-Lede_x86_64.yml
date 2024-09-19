@@ -21,9 +21,6 @@ on:
 permissions: write-all
 
 env: 
-  REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-  SCKEY: ${{ secrets.SCKEY }}
-  GITHUB_RELEASE: https://github.com/yichu77/build-openwrt/releases
   TZ: Asia/Shanghai
 
 jobs: 
@@ -38,10 +35,24 @@ jobs:
         target: [Lede_x86_64]  #[Lede_x86_64,Lienol_x86_64,Project_x86_64,Project_hiwifi_c526a]
 
     steps:
-    - name: 准备完毕
+    - name: 签入项目
       uses: actions/checkout@main
- 
-    - name: 清理磁盘空间
+
+    - name: 初始化
+      run: |
+        source "${GITHUB_WORKSPACE}/build/${{matrix.target}}/settings.ini"
+        echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+        echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
+        echo "DIY_P1_SH=${DIY_P1_SH}" >> $GITHUB_ENV
+        echo "DIY_P2_SH=${DIY_P2_SH}" >> $GITHUB_ENV
+        echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
+        echo "UPLOAD_CONFIG=${UPLOAD_CONFIG}" >> $GITHUB_ENV
+        echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
+        echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV  
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+    - name: 清理空间
       uses: endersonmenezes/free-disk-space@main
       with:
         remove_android: true
@@ -59,23 +70,6 @@ jobs:
           /var/lib/mysql* /var/log/azure*"
         testing: false
 
-    - name: 初始化设置
-      run: |
-        source "${GITHUB_WORKSPACE}/build/${{matrix.target}}/settings.ini"
-        echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
-        echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
-        echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
-        echo "DIY_P1_SH=${DIY_P1_SH}" >> $GITHUB_ENV
-        echo "DIY_P2_SH=${DIY_P2_SH}" >> $GITHUB_ENV
-        echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
-        echo "UPLOAD_CONFIG=${UPLOAD_CONFIG}" >> $GITHUB_ENV
-        echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
-        echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV  
-        echo "date=$(date "+%Y-%m-%d %H.%M")" >> $GITHUB_ENV
-        echo "date1=$(date "+%Y年%m月%d号-%H点%M分")" >> $GITHUB_ENV
-        echo "date2=$(date "+%Y%m%d-%H%M")" >> $GITHUB_ENV
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-
     - name: 部署编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -89,14 +83,14 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: 下载${{matrix.target}}源码
+    - name: 克隆OpenWRT源码
       working-directory: /workdir
       run: |
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: 加载源,patch补丁和自定义设置
+    - name: 加载feeds源、patch补丁及自定义设置
       run: |
         cp -Rf `find ./ -maxdepth 1 -type d ! -path './openwrt' ! -path './'` openwrt
         cd openwrt
@@ -163,13 +157,6 @@ jobs:
     - name: 检查空间使用率
       if: (!cancelled())
       run: df -hT
-      
-    - name: 上传bin文件夹(固件+ipk)在github空间
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
 
     - name: 整理文件
       id: organize
@@ -179,17 +166,25 @@ jobs:
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
-    
-    - name: 上传.config配置文件在github空间
+
+    - name: 上传bin文件夹到github空间(固件+ipk)
       uses: actions/upload-artifact@main
-      if: steps.organizer.outputs.status == 'success' && env.UPLOAD_CONFIG == 'true'
+      if: steps.tag.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
+
+    
+    - name: 上传.config配置文件到github空间
+      uses: actions/upload-artifact@main
+      if: steps.tag.outputs.status == 'success' && env.UPLOAD_CONFIG == 'true'
       with:
         name: .config_${{matrix.target}}_${{ env.FILE_DATE }}
         path: ./config
 
-    - name: 上传固件在github空间
+    - name: 上传固件到github空间
       uses: actions/upload-artifact@main
-      if: steps.organizer.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
+      if: steps.tag.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'    #steps.organizer.outputs.status
       with:
         name: OpenWrt_firmware_${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
@@ -198,7 +193,7 @@ jobs:
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=OpenWrt_firmware_${{matrix.target}}_$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
         [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
