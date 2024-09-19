@@ -69,13 +69,10 @@ jobs:
         echo "WXFB_MESSAGE=${WXFB_MESSAGE}" >> $GITHUB_ENV
         echo "DIY_P1_SH=${DIY_P1_SH}" >> $GITHUB_ENV
         echo "DIY_P2_SH=${DIY_P2_SH}" >> $GITHUB_ENV
-        echo "SSH_ACTIONS=${SSH_ACTIONS}" >> $GITHUB_ENV
         echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
         echo "UPLOAD_CONFIG=${UPLOAD_CONFIG}" >> $GITHUB_ENV
         echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
-        echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
         echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
-        echo "SERVERCHAN_SCKEY=${SERVERCHAN_SCKEY}" >> $GITHUB_ENV
     
     - name: 开始安装编译所需系统
       env:
@@ -144,7 +141,7 @@ jobs:
         cd openwrt
         echo -e "$(($(nproc)+1)) thread compile"
         make -j$(($(nproc)+1)) || make -j1 V=s
-        echo "::set-output name=status::success"     
+#        echo "::set-output name=status::success"     
         echo "date=$(date "+%Y-%m-%d %H.%M")" >> $GITHUB_ENV
         echo "date1=$(date "+%Y年%m月%d号-%H点%M分")" >> $GITHUB_ENV
         echo "date2=$(date "+%Y%m%d-%H%M")" >> $GITHUB_ENV
@@ -173,7 +170,7 @@ jobs:
         find -name "*esxi.vmdk*" | xargs -i mv -f {} packages
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
+#        echo "::set-output name=status::success"
     
     - name: 上传.config配置文件在github空间
       uses: actions/upload-artifact@main
@@ -189,10 +186,3 @@ jobs:
         name: OpenWrt_firmware_${{matrix.target}}_${{ env.date }}
         path: ${{ env.FIRMWARE }}
     
-    - name: 删除上传在github空间的老固件
-      uses: dev-drprasad/delete-older-releases@master
-      if: steps.organizer.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
-      with:
-        age: '1 day'
-        skip-recent: 3
-
