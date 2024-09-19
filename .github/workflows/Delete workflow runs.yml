@@ -21,7 +21,10 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
+
   build:
+    runs-on:
+    name: 删除工作流程
     steps:
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
