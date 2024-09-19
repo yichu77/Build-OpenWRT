@@ -15,6 +15,11 @@ name: OpenWrt编译
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'build-${{matrix.target}}'
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
