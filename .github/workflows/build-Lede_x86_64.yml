@@ -21,7 +21,6 @@ on:
 permissions: write-all
 
 env: 
-  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
   SCKEY: ${{ secrets.SCKEY }}
   GITHUB_RELEASE: https://github.com/yichu77/build-openwrt/releases
@@ -200,7 +199,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       with:
-        name: ${{ env.date1 }} 「 ${{ env.WXFB_MESSAGE }} 」固件
+        name: ${{ env.date1 }} 「 ${{ matrix.target }} 」固件
         tag_name: ${{ env.date2 }}
         body: |            
             ☆  源码 : ${{ env.REPO_URL }}
