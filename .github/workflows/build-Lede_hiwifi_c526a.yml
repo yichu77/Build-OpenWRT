@@ -168,7 +168,7 @@ jobs:
 
     - name: 上传固件到github空间
       uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'    #steps.organizer.outputs.status
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'  
       with:
         name: OpenWrt_firmware_${{matrix.target}}_${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
