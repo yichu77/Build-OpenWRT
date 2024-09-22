@@ -21,7 +21,7 @@ env:
 
 jobs: 
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: github.event.repository.owner.id == github.event.sender.id
 
     name: 编译 ${{matrix.target}}
@@ -149,29 +149,52 @@ jobs:
         name: OpenWrt_bin_${{matrix.target}}_${{ env.FILE_DATE }}
         path: openwrt/bin
         
+    - name: 上传bin文件夹到github空间(固件+ipk)
+      uses: actions/upload-artifact@main
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin_${{matrix.target}}_${{ env.FILE_DATE }}
+        path: openwrt/bin
         
-    - name: Prepare artifact
+    - name: 整理文件
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        mkdir -p ./artifact/package
-        mkdir -p ./artifact/buildinfo
-        rm -rf $(find ./bin/targets/ -type d -name "packages")
-        cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
-        cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
-
-    - name: Upload buildinfo
-      uses: actions/upload-artifact@v3
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+    
+    - name: 上传.config配置文件到github空间
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_CONFIG == 'true'
       with:
-        name: OpenWrt_buildinfo
-        path: ./artifact/buildinfo/
+        name: .config_${{matrix.target}}_${{ env.FILE_DATE }}
+        path: /.config
 
-    - name: Upload package
-      uses: actions/upload-artifact@v3
+    - name: 上传固件到github空间
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'  
       with:
-        name: OpenWrt_package
-        path: ./artifact/package/
-
-    - name: Upload firmware
-      uses: actions/upload-artifact@v3
+        name: OpenWrt_firmware_${{matrix.target}}_${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+    
+    - name: 生成release标签
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=OpenWrt_firmware_${{matrix.target}}_$(date +"%Y-%m-%d_%H%M")" >> $GITHUB_OUTPUT
+        touch release.txt
+        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+    
+    - name: 上传固件到release
+      uses: softprops/action-gh-release@master
+      if: steps.tag.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: OpenWrt_firmware
-        path: ./bin/targets/
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+        
