@@ -20,7 +20,7 @@ env:
   TZ: Asia/Shanghai
 
 jobs: 
-  build openwrt:
+  build_openwrt:
     runs-on: ubuntu-latest
     if: github.event.repository.owner.id == github.event.sender.id
 
