@@ -20,6 +20,7 @@ sed -i '$a src-git helloworld https://github.com/fw876/helloworld' feeds.conf.de
 #git clone https://github.com/jerrykuku/luci-app-jd-dailybonus.git package/lean/luci-app-jd-dailybonus  #京东签到
 git clone https://github.com/sirpdboy/luci-theme-opentopd.git package/lean/luci-theme-opentopd #主题
 git clone https://github.com/sirpdboy/luci-app-advanced.git package/lean/luci-app-advanced #高级设置
+git clone https://github.com/sirpdboy/luci-app-lucky.git package/lucky
 #git clone https://github.com/ntlf9t/luci-app-easymesh.git package/lean/luci-app-easymesh #简单mesh
 #git clone https://github.com/lisaac/luci-app-dockerman.git package/lean/luci-app-dockerman
 #git clone https://github.com/awesome-openwrt/luci-app-control-timewol.git package/lean/luci-app-control-timewol #定时唤醒
