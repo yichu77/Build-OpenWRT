@@ -21,11 +21,7 @@ env:
 
 jobs: 
   build_openwrt:
-<<<<<<< HEAD
-    runs-on: ubuntu-18.04
-=======
     runs-on: ubuntu-20.04
->>>>>>> 40d2a4486efb0450815d8d981681701108ca2be2
     if: github.event.repository.owner.id == github.event.sender.id
 
     name: 编译 ${{matrix.target}}
